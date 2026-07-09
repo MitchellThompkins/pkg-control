@@ -71,7 +71,7 @@ DOCS_PDF        := $(DOCS_DIR)/$(PACKAGE).pdf
 DOCS_QCH        := $(DOCS_DIR)/$(PACKAGE).qch
 DOCS_LOGO       := $(DOCS_DIR)/$(PACKAGE).svg
 
-.PHONY: help dist docs-html docs release install all check check-ci check-local run clean
+.PHONY: help dist docs-html docs release install all check check-ci check-local tarball-nodocs run clean
 
 help:
 	@echo " "
@@ -92,6 +92,7 @@ help:
 	@echo "   check     - Execute package tests (with install)"
 	@echo "   check-ci  - Build a doc-free tarball, install it, and run tests"
 	@echo "   check-local - Run check-ci inside Docker via compose"
+	@echo "   tarball-nodocs - Build a doc-free tarball without running tests"
 	@echo
 	@echo "   clean     - Remove releases, doc and oct files"
 	@echo "   distclean - Remove releases, oct files and compiled libraries"
@@ -232,13 +233,15 @@ check: install
 	$(OCTAVE) --path "inst/" --path "src/" \
 	  --eval 'pkg test control'
 
-check-ci: $(RELEASE_TARBALL_CI)
+check-ci: tarball-nodocs
 	$(OCTAVE) --no-gui --version
 	$(OCTAVE) --no-gui --eval 'pkg install "$(RELEASE_TARBALL_CI)"'
 	$(OCTAVE) --no-gui devel/run_tests.m
 
 check-local:
 	docker compose --file devel/compose.yaml --project-directory . run --rm octave
+
+tarball-nodocs: $(RELEASE_TARBALL_CI)
 
 clean:
 	$(RM) -r $(TARGET_DIR)
